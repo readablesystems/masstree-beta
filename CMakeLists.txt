@@ -17,7 +17,6 @@ set(LIBJSON_SOURCES
         msgpack.cc
         clp.c
         kvrandom.cc
-        compiler.cc
         memdebug.cc
         kvthread.cc)
 
@@ -38,6 +37,7 @@ set(MTTEST_SOURCES
 add_library(masstree ${LIBMASSTREE_SOURCES})
 add_library(kvtree ${LIBKVTREE_SOURCES})
 add_library(json ${LIBJSON_SOURCES})
+add_library(dprint compiler.cc)
 
 add_executable(mttest ${MTTEST_SOURCES})
-target_link_libraries(mttest libjson libkvtree)
+target_link_libraries(mttest masstree json kvtree dprint)
