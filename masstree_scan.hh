@@ -309,6 +309,14 @@ template <typename P> template <typename H, typename F>
 int basic_table<P>::scan(H helper,
                          Str firstkey, bool emit_firstkey,
                          F& scanner,
+                         threadinfo& ti) const {
+    return scan_with_limit(helper, firstkey, emit_firstkey, scanner, -1, ti);
+}
+
+template <typename P> template <typename H, typename F>
+int basic_table<P>::scan_with_limit(H helper,
+                         Str firstkey, bool emit_firstkey,
+                         F& scanner, int scan_limit,
                          threadinfo& ti) const
 {
     typedef typename P::ikey_type ikey_type;
@@ -328,6 +336,7 @@ int basic_table<P>::scan(H helper,
     leafvalue_type entry = leafvalue_type::make_empty();
 
     int scancount = 0;
+    bool limit = scan_limit > 0;
     int state;
 
     while (1) {
@@ -343,6 +352,8 @@ int basic_table<P>::scan(H helper,
         case mystack_type::scan_emit:
             ++scancount;
             if (!scanner.visit_value(ka, entry.value(), ti))
+                goto done;
+            if (limit && (scancount == scan_limit))
                 goto done;
             stack.ki_ = helper.next(stack.ki_);
             state = stack.find_next(helper, ka, entry);
@@ -394,11 +405,27 @@ int basic_table<P>::scan(Str firstkey, bool emit_firstkey,
 }
 
 template <typename P> template <typename F>
+int basic_table<P>::scan(Str firstkey, bool emit_firstkey,
+                         F& scanner, int scan_limit,
+                         threadinfo& ti) const
+{
+    return scan_with_limit(forward_scan_helper(), firstkey, emit_firstkey, scanner, scan_limit, ti);
+}
+
+template <typename P> template <typename F>
 int basic_table<P>::rscan(Str firstkey, bool emit_firstkey,
                           F& scanner,
                           threadinfo& ti) const
 {
     return scan(reverse_scan_helper(), firstkey, emit_firstkey, scanner, ti);
+}
+
+template <typename P> template <typename F>
+int basic_table<P>::rscan(Str firstkey, bool emit_firstkey,
+                          F& scanner, int scan_limit,
+                          threadinfo& ti) const
+{
+    return scan_with_limit(reverse_scan_helper(), firstkey, emit_firstkey, scanner, scan_limit, ti);
 }
 
 } // namespace Masstree
