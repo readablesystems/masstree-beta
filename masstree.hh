@@ -76,7 +76,11 @@ class basic_table {
     template <typename F>
     int scan(Str firstkey, bool matchfirst, F& scanner, threadinfo& ti) const;
     template <typename F>
+    int scan(Str firstkey, bool matchfirst, F& scanner, int scan_limit, threadinfo& ti) const;
+    template <typename F>
     int rscan(Str firstkey, bool matchfirst, F& scanner, threadinfo& ti) const;
+    template <typename F>
+    int rscan(Str firstkey, bool matchfirst, F& scanner, int scan_limit, threadinfo& ti) const;
 
     inline void print(FILE* f = 0, int indent = 0) const;
 
@@ -86,6 +90,9 @@ class basic_table {
     template <typename H, typename F>
     int scan(H helper, Str firstkey, bool matchfirst,
              F& scanner, threadinfo& ti) const;
+    template <typename H, typename F>
+    int scan_with_limit(H helper, Str firstkey, bool matchfirst,
+                        F& scanner, int scan_limit, threadinfo& ti) const;
 
     friend class unlocked_tcursor<P>;
     friend class tcursor<P>;
