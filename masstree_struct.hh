@@ -64,7 +64,7 @@ class node_base : public make_nodeversion<P>::type {
             return static_cast<const internode_type*>(this)->parent_;
     }
     inline bool parent_exists(base_type* p) const {
-        return p != 0;
+        return p != nullptr;
     }
     inline bool has_parent() const {
         return parent_exists(parent());
@@ -93,7 +93,7 @@ class node_base : public make_nodeversion<P>::type {
             ::prefetch((const char *) this + i);
     }
 
-    void print(FILE* f, const char* prefix, int indent, int kdepth);
+    void print(FILE* f, const char* prefix, int depth, int kdepth) const;
 };
 
 template <typename P>
@@ -107,19 +107,20 @@ class internode : public node_base<P> {
     typedef typename P::threadinfo_type threadinfo;
 
     uint8_t nkeys_;
+    uint32_t height_;
     ikey_type ikey0_[width];
     node_base<P>* child_[width + 1];
     node_base<P>* parent_;
     kvtimestamp_t created_at_[P::debug_level > 0];
 
-    internode()
-        : node_base<P>(false), nkeys_(0), parent_() {
+    internode(uint32_t height)
+        : node_base<P>(false), nkeys_(0), height_(height), parent_() {
     }
 
-    static internode<P>* make(threadinfo& ti) {
+    static internode<P>* make(uint32_t height, threadinfo& ti) {
         void* ptr = ti.pool_allocate(sizeof(internode<P>),
                                      memtag_masstree_internode);
-        internode<P>* n = new(ptr) internode<P>;
+        internode<P>* n = new(ptr) internode<P>(height);
         assert(n);
         if (P::debug_level > 0)
             n->created_at_[0] = ti.operation_timestamp();
@@ -150,7 +151,7 @@ class internode : public node_base<P> {
             ::prefetch((const char *) this + i);
     }
 
-    void print(FILE* f, const char* prefix, int indent, int kdepth);
+    void print(FILE* f, const char* prefix, int depth, int kdepth) const;
 
     void deallocate(threadinfo& ti) {
         ti.pool_deallocate(this, sizeof(*this), memtag_masstree_internode);
@@ -460,7 +461,7 @@ class leaf : public node_base<P> {
         }
     }
 
-    void print(FILE* f, const char* prefix, int indent, int kdepth);
+    void print(FILE* f, const char* prefix, int depth, int kdepth) const;
 
     leaf<P>* safe_next() const {
         return reinterpret_cast<leaf<P>*>(next_.x & ~(uintptr_t) 1);
@@ -560,6 +561,16 @@ internode<P>* node_base<P>::locked_parent(threadinfo& ti) const
 }
 
 
+template <typename P>
+void node_base<P>::print(FILE* f, const char* prefix, int depth, int kdepth) const
+{
+    if (this->isleaf())
+        static_cast<const leaf<P>*>(this)->print(f, prefix, depth, kdepth);
+    else
+        static_cast<const internode<P>*>(this)->print(f, prefix, depth, kdepth);
+}
+
+
 /** @brief Return the result of compare_key(k, LAST KEY IN NODE).
 
     Reruns the comparison until a stable comparison is obtained. */
@@ -620,7 +631,7 @@ inline leaf<P>* node_base<P>::reach_leaf(const key_type& ka,
 
     // Loop over internal nodes.
     while (!v[sense].isleaf()) {
-        const internode<P> *in = static_cast<const internode<P> *>(n[sense]);
+        const internode<P> *in = static_cast<const internode<P>*>(n[sense]);
         in->prefetch();
         int kp = internode<P>::bound_type::upper(ka, *in);
         n[!sense] = in->child_[kp];
