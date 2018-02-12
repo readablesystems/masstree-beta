@@ -1,7 +1,7 @@
 AR = ar
 CC = @CC@
 CXX = @CXX@
-CPPFLAGS = @CPPFLAGS@
+CPPFLAGS = @CPPFLAGS@ -std=c++11
 CXXFLAGS = @CXXFLAGS@
 DEPSDIR := .deps
 DEPCFLAGS = -MD -MF $(DEPSDIR)/$*.d -MP
@@ -91,7 +91,7 @@ stamp-h: config.h.in config.status
 	echo > stamp-h
 
 clean:
-	rm -f mtd mtclient mttest test_string test_atomics *.o libjson.a
+	rm -f mtd mtclient mttest test_string test_atomics unit-mt *.o libjson.a
 	rm -rf .deps
 
 DEPFILES := $(wildcard $(DEPSDIR)/*.d)
