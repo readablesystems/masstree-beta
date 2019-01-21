@@ -1,7 +1,7 @@
 AR = ar
 CC = @CC@
 CXX = @CXX@
-CPPFLAGS = @CPPFLAGS@ -std=c++11
+CPPFLAGS = @CPPFLAGS@ -std=c++14
 CXXFLAGS = @CXXFLAGS@
 DEPSDIR := .deps
 DEPCFLAGS = -MD -MF $(DEPSDIR)/$*.d -MP

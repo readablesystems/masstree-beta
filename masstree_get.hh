@@ -113,6 +113,11 @@ bool tcursor<P>::find_locked(threadinfo& ti)
         root = const_cast<node_base<P>*>(root_);
         goto retry;
     }
+
+    // (XXX experiments: simulating CC overhead of tracking internal/leaf nodes)
+    if (P::has_tmvbox(n_->mvcc_box)) {
+        P::mvtbox_callback(n_->mvcc_box);
+    }
     return state_;
 }
 

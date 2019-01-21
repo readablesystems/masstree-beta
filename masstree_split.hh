@@ -258,10 +258,21 @@ bool tcursor<P>::make_split(threadinfo& ti)
                 new_nodes_.emplace_back(nr, nr->full_unlocked_version_value());
         }
 
-        if (n != n_)
+        if (n != n_) {
             n->unlock();
-        if (child != n_)
+
+            // (XXX experiments: simulating CC overhead of tracking internal/leaf nodes)
+            if (P::has_tmvbox(n_->mvcc_box)) {
+                P::mvtbox_callback(n_->mvcc_box);
+            }
+        }
+        if (child != n_) {
             child->unlock();
+            // (XXX experiments: simulating CC overhead of tracking internal/leaf nodes)
+            if (P::has_tmvbox(n_->mvcc_box)) {
+                P::mvtbox_callback(n_->mvcc_box);
+            }
+        }
         if (next_child) {
             n = p;
             child = next_child;
@@ -269,6 +280,10 @@ bool tcursor<P>::make_split(threadinfo& ti)
             ++height;
         } else if (p) {
             p->unlock();
+            // (XXX experiments: simulating CC overhead of tracking internal/leaf nodes)
+            if (P::has_tmvbox(n_->mvcc_box)) {
+                P::mvtbox_callback(n_->mvcc_box);
+            }
             break;
         } else
             break;

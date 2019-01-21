@@ -105,6 +105,7 @@ class internode : public node_base<P> {
     typedef typename P::ikey_type ikey_type;
     typedef typename key_bound<width, P::bound_method>::type bound_type;
     typedef typename P::threadinfo_type threadinfo;
+    typedef typename P::template tmvbox_type<internode> tmvbox_type;
 
     uint8_t nkeys_;
     uint32_t height_;
@@ -112,6 +113,8 @@ class internode : public node_base<P> {
     node_base<P>* child_[width + 1];
     node_base<P>* parent_;
     kvtimestamp_t created_at_[P::debug_level > 0];
+
+    tmvbox_type* mvcc_box;
 
     internode(uint32_t height)
         : node_base<P>(false), nkeys_(0), height_(height), parent_() {
@@ -261,6 +264,8 @@ class leaf : public node_base<P> {
     static constexpr int ksuf_keylenx = 64;
     static constexpr int layer_keylenx = 128;
 
+    typedef typename P::template tmvbox_type<leaf> tmvbox_type;
+
     enum {
         modstate_insert = 0, modstate_remove = 1, modstate_deleted_layer = 2
     };
@@ -279,6 +284,7 @@ class leaf : public node_base<P> {
     leaf<P>* prev_;
     node_base<P>* parent_;
     phantom_epoch_type phantom_epoch_[P::need_phantom_epoch];
+    tmvbox_type* mvcc_box;
     kvtimestamp_t created_at_[P::debug_level > 0];
     internal_ksuf_type iksuf_[0];
 

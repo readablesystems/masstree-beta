@@ -39,6 +39,19 @@ template <int LW = 15, int IW = LW> struct nodeparams {
     typedef uint64_t phantom_epoch_type;
     static constexpr ssize_t print_max_indent_depth = 12;
     typedef key_unparse_printable_string key_unparse_type;
+
+    template <typename NodeType>
+    using tmvbox_type = void;
+
+    template <typename MvBoxType>
+    static inline void mvtbox_callback(MvBoxType* box) {
+        (void)box;
+    }
+
+    template <typename MvBoxType>
+    static inline bool has_tmvbox(MvBoxType* box) {
+        return !std::is_same<void, decltype(box)>::value;
+    }
 };
 
 template <int LW, int IW> constexpr int nodeparams<LW, IW>::leaf_width;
