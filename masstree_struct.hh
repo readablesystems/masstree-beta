@@ -122,14 +122,9 @@ class internode : public node_base<P> {
 
     internode(uint32_t height)
         : node_base<P>(false), nkeys_(0), height_(height), parent_(), mvcc_box() {
-        if (P::has_tmvbox(mvcc_box)) {
-            mvcc_box = new tmvbox_type();
+        if (P::simulated_node_tracking) {
+            P::tmvbox_init_callback(mvcc_box);
         }
-    }
-
-    ~internode() {
-        if (mvcc_box != nullptr)
-            delete mvcc_box;
     }
 
     static internode<P>* make(uint32_t height, threadinfo& ti) {
@@ -310,15 +305,9 @@ class leaf : public node_base<P> {
             new((void *)&iksuf_[0]) internal_ksuf_type(width, sz - sizeof(*this));
         if (P::need_phantom_epoch)
             phantom_epoch_[0] = phantom_epoch;
-
-        if (P::has_tmvbox(mvcc_box)) {
-            mvcc_box = new tmvbox_type();
+        if (P::simulated_node_tracking) {
+            P::tmvbox_init_callback(mvcc_box);
         }
-    }
-
-    ~leaf() {
-        if (mvcc_box != nullptr)
-            delete mvcc_box;
     }
 
     static leaf<P>* make(int ksufsize, phantom_epoch_type phantom_epoch, threadinfo& ti) {

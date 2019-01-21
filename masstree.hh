@@ -43,12 +43,12 @@ template <int LW = 15, int IW = LW> struct nodeparams {
     static constexpr bool simulated_node_tracking = false;
     typedef long tmvbox_type;
     template <typename MvBoxType>
-    static inline void mvtbox_callback(MvBoxType* box) {
+    static inline void tmvbox_callback(MvBoxType* box) {
         (void)box;
     }
     template <typename MvBoxType>
-    static inline bool has_tmvbox(MvBoxType* box) {
-        return !std::is_same<long, decltype(box)>::value;
+    static inline void tmvbox_init_callback(MvBoxType* &box) {
+        (void)box;
     }
 };
 

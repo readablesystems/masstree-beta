@@ -116,7 +116,7 @@ bool tcursor<P>::find_locked(threadinfo& ti)
 
     // (XXX experiments: simulating CC overhead of tracking internal/leaf nodes)
     if (P::simulated_node_tracking) {
-        P::mvtbox_callback(n_->mvcc_box);
+        P::tmvbox_callback(n_->mvcc_box);
     }
     return state_;
 }
