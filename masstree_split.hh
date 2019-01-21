@@ -262,14 +262,14 @@ bool tcursor<P>::make_split(threadinfo& ti)
             n->unlock();
 
             // (XXX experiments: simulating CC overhead of tracking internal/leaf nodes)
-            if (P::has_tmvbox(n_->mvcc_box)) {
+            if (P::simulated_node_tracking) {
                 P::mvtbox_callback(n_->mvcc_box);
             }
         }
         if (child != n_) {
             child->unlock();
             // (XXX experiments: simulating CC overhead of tracking internal/leaf nodes)
-            if (P::has_tmvbox(n_->mvcc_box)) {
+            if (P::simulated_node_tracking) {
                 P::mvtbox_callback(n_->mvcc_box);
             }
         }
@@ -281,7 +281,7 @@ bool tcursor<P>::make_split(threadinfo& ti)
         } else if (p) {
             p->unlock();
             // (XXX experiments: simulating CC overhead of tracking internal/leaf nodes)
-            if (P::has_tmvbox(n_->mvcc_box)) {
+            if (P::simulated_node_tracking) {
                 P::mvtbox_callback(n_->mvcc_box);
             }
             break;

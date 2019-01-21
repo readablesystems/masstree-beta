@@ -105,7 +105,7 @@ class internode : public node_base<P> {
     typedef typename P::ikey_type ikey_type;
     typedef typename key_bound<width, P::bound_method>::type bound_type;
     typedef typename P::threadinfo_type threadinfo;
-    typedef typename P::template tmvbox_type<internode> tmvbox_type;
+    typedef typename P::tmvbox_type tmvbox_type;
 
     uint8_t nkeys_;
     uint32_t height_;
@@ -116,8 +116,20 @@ class internode : public node_base<P> {
 
     tmvbox_type* mvcc_box;
 
+    internode() = default;
+    internode(const internode& other) = default;
+    internode(internode&& rhs) = delete;
+
     internode(uint32_t height)
-        : node_base<P>(false), nkeys_(0), height_(height), parent_() {
+        : node_base<P>(false), nkeys_(0), height_(height), parent_(), mvcc_box() {
+        if (P::has_tmvbox(mvcc_box)) {
+            mvcc_box = new tmvbox_type();
+        }
+    }
+
+    ~internode() {
+        if (mvcc_box != nullptr)
+            delete mvcc_box;
     }
 
     static internode<P>* make(uint32_t height, threadinfo& ti) {
@@ -264,7 +276,7 @@ class leaf : public node_base<P> {
     static constexpr int ksuf_keylenx = 64;
     static constexpr int layer_keylenx = 128;
 
-    typedef typename P::template tmvbox_type<leaf> tmvbox_type;
+    typedef typename P::tmvbox_type tmvbox_type;
 
     enum {
         modstate_insert = 0, modstate_remove = 1, modstate_deleted_layer = 2
@@ -291,13 +303,22 @@ class leaf : public node_base<P> {
     leaf(size_t sz, phantom_epoch_type phantom_epoch)
         : node_base<P>(true), modstate_(modstate_insert),
           permutation_(permuter_type::make_empty()),
-          ksuf_(), parent_(), iksuf_{} {
+          ksuf_(), parent_(), mvcc_box(), iksuf_{} {
         masstree_precondition(sz % 64 == 0 && sz / 64 < 128);
         extrasize64_ = (int(sz) >> 6) - ((int(sizeof(*this)) + 63) >> 6);
         if (extrasize64_ > 0)
             new((void *)&iksuf_[0]) internal_ksuf_type(width, sz - sizeof(*this));
         if (P::need_phantom_epoch)
             phantom_epoch_[0] = phantom_epoch;
+
+        if (P::has_tmvbox(mvcc_box)) {
+            mvcc_box = new tmvbox_type();
+        }
+    }
+
+    ~leaf() {
+        if (mvcc_box != nullptr)
+            delete mvcc_box;
     }
 
     static leaf<P>* make(int ksufsize, phantom_epoch_type phantom_epoch, threadinfo& ti) {
