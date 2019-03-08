@@ -208,7 +208,7 @@ void threadinfo::refill_pool(int nl) {
         superpage_size = read_superpage_size();
     if (superpage_size != (size_t) -1) {
         pool_size = superpage_size;
-# if MADV_HUGEPAGE
+# if MADV_HUGEPAGE && !MAP_HUGETLB
         if ((r = posix_memalign(&pool, pool_size, pool_size)) != 0) {
             fprintf(stderr, "posix_memalign superpage: %s\n", strerror(r));
             pool = 0;
