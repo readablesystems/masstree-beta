@@ -105,7 +105,6 @@ class internode : public node_base<P> {
     typedef typename P::ikey_type ikey_type;
     typedef typename key_bound<width, P::bound_method>::type bound_type;
     typedef typename P::threadinfo_type threadinfo;
-    typedef typename P::tmvbox_type tmvbox_type;
 
     uint8_t nkeys_;
     uint32_t height_;
@@ -114,17 +113,12 @@ class internode : public node_base<P> {
     node_base<P>* parent_;
     kvtimestamp_t created_at_[P::debug_level > 0];
 
-    tmvbox_type* mvcc_box;
-
     internode() = default;
     internode(const internode& other) = default;
     internode(internode&& rhs) = delete;
 
     internode(uint32_t height)
-        : node_base<P>(false), nkeys_(0), height_(height), parent_(), mvcc_box() {
-        if (P::simulated_node_tracking) {
-            P::tmvbox_init_callback(mvcc_box);
-        }
+        : node_base<P>(false), nkeys_(0), height_(height), parent_() {
     }
 
     static internode<P>* make(uint32_t height, threadinfo& ti) {
@@ -270,8 +264,7 @@ class leaf : public node_base<P> {
     typedef typename P::phantom_epoch_type phantom_epoch_type;
     static constexpr int ksuf_keylenx = 64;
     static constexpr int layer_keylenx = 128;
-
-    typedef typename P::tmvbox_type tmvbox_type;
+    typedef typename P::aux_tracker_type aux_tracker_type;
 
     enum {
         modstate_insert = 0, modstate_remove = 1, modstate_deleted_layer = 2
@@ -290,23 +283,31 @@ class leaf : public node_base<P> {
     } next_;
     leaf<P>* prev_;
     node_base<P>* parent_;
+    mutable aux_tracker_type aux_tracker_[P::track_nodes];
     phantom_epoch_type phantom_epoch_[P::need_phantom_epoch];
-    tmvbox_type* mvcc_box;
     kvtimestamp_t created_at_[P::debug_level > 0];
     internal_ksuf_type iksuf_[0];
 
     leaf(size_t sz, phantom_epoch_type phantom_epoch)
         : node_base<P>(true), modstate_(modstate_insert),
           permutation_(permuter_type::make_empty()),
-          ksuf_(), parent_(), mvcc_box(), iksuf_{} {
+          ksuf_(), parent_(), iksuf_{} {
         masstree_precondition(sz % 64 == 0 && sz / 64 < 128);
         extrasize64_ = (int(sz) >> 6) - ((int(sizeof(*this)) + 63) >> 6);
         if (extrasize64_ > 0)
             new((void *)&iksuf_[0]) internal_ksuf_type(width, sz - sizeof(*this));
-        if (P::need_phantom_epoch)
+        if constexpr (P::need_phantom_epoch)
             phantom_epoch_[0] = phantom_epoch;
-        if (P::simulated_node_tracking) {
-            P::tmvbox_init_callback(mvcc_box);
+        if constexpr (P::track_nodes) {
+            aux_tracker_[0] = aux_tracker_type();
+        }
+    }
+
+    aux_tracker_type* get_aux_tracker() const {
+        if constexpr (P::track_nodes) {
+            return &aux_tracker_[0];
+        } else {
+            return nullptr;
         }
     }
 

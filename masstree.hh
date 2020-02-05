@@ -40,16 +40,10 @@ template <int LW = 15, int IW = LW> struct nodeparams {
     static constexpr ssize_t print_max_indent_depth = 12;
     typedef key_unparse_printable_string key_unparse_type;
 
-    static constexpr bool simulated_node_tracking = false;
-    typedef long tmvbox_type;
-    template <typename MvBoxType>
-    static inline void tmvbox_callback(MvBoxType* box) {
-        (void)box;
-    }
-    template <typename MvBoxType>
-    static inline void tmvbox_init_callback(MvBoxType* &box) {
-        (void)box;
-    }
+    // Auxiliary node tracking
+    // Used to implement TicToc phantom protection.
+    static constexpr bool track_nodes = false;
+    typedef int aux_tracker_type;
 };
 
 template <int LW, int IW> constexpr int nodeparams<LW, IW>::leaf_width;
