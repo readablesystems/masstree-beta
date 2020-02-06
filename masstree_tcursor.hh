@@ -79,10 +79,19 @@ class unlocked_tcursor {
         return (v_.version_value() << leaf<P>::permuter_type::size_bits) + perm_.size();
     }
 
+    typename P::aux_tracker_type* get_aux_tracker() {
+        if constexpr (P::track_nodes) {
+            return &tkr_[0];
+        } else {
+            return nullptr;
+        }
+    }
+
   private:
     leaf<P>* n_;
     key_type ka_;
     typename leaf<P>::nodeversion_type v_;
+    typename P::aux_tracker_type tkr_[P::track_nodes];
     permuter_type perm_;
     leafvalue<P> lv_;
     const node_base<P>* root_;

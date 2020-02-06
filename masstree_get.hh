@@ -42,6 +42,13 @@ bool unlocked_tcursor<P>::find_unlocked(threadinfo& ti)
         match = n_->ksuf_matches(kx.p, ka_);
     } else
         match = 0;
+    if constexpr (P::track_nodes) {
+        if (match == 0) {
+            // Store a snapshot of the node tracker
+            // (TicTocVersion in our case)
+            tkr_[0] = *n_->get_aux_tracker();
+        }
+    }
     if (n_->has_changed(v_)) {
         ti.mark(threadcounter(tc_stable_leaf_insert + n_->simple_has_split(v_)));
         n_ = n_->advance_to_key(ka_, v_, ti);
