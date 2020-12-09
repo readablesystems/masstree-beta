@@ -89,14 +89,15 @@ int leaf<P>::split_into(leaf<P>* nr, int p, const key_type& ka,
         masstree_invariant(mid > 0 && mid <= width);
     }
 
-    typename permuter_type::value_type pv = perml.value_from(mid - (p < mid));
-    for (int x = mid; x <= width; ++x)
+    typename permuter_type::value_type pv = perml.value_from(mid - (p < mid || mid == width));
+    for (int x = mid; x <= width; ++x) {
         if (x == p)
             nr->assign_initialize(x - mid, ka, ti);
         else {
             nr->assign_initialize(x - mid, this, pv & 15, ti);
             pv >>= 4;
         }
+    }
     permuter_type permr = permuter_type::make_sorted(width + 1 - mid);
     if (p >= mid)
         permr.remove_to_back(p - mid);
